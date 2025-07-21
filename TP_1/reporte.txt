@@ -1,0 +1,5 @@
+Cantidad Total de Bloques: 61
+Cantidad Alertas: 0
+Frecuencia Media: 111.52014344203079
+Presion Media: 147.91185946779237
+Oxigeno Media: 93.54806526081703
