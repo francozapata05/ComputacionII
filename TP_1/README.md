@@ -1,7 +1,7 @@
-🩺 Simulador de Monitoreo de Pacientes con Blockchain
+# 🩺 Simulador de Monitoreo de Pacientes con Blockchain
 Este proyecto, desarrollado para la materia Computación II, simula un sistema de monitoreo de signos vitales de pacientes en tiempo real. Los datos generados son procesados de forma concurrente y almacenados de manera segura e inmutable en una cadena de bloques (blockchain).
 
-📝 Descripción General
+## 📝 Descripción General
 El sistema utiliza múltiples procesos que se comunican entre sí para realizar distintas tareas:
 
 Generación de Datos: Un proceso simula la llegada de datos de un paciente (frecuencia cardíaca, presión arterial, saturación de oxígeno).
@@ -12,7 +12,7 @@ Construcción de la Blockchain: Un proceso verificador recopila los datos analiz
 
 Verificación y Reporte: Al finalizar la simulación, se verifica la integridad de toda la cadena de bloques recalculando los hashes y se genera un reporte final con estadísticas agregadas.
 
-🏗️ Arquitectura del Sistema
+## 🏗️ Arquitectura del Sistema
 El sistema está diseñado con una arquitectura de procesos concurrentes que se comunican a través de FIFOs (Named Pipes) y Queues.
 
 El flujo de datos es el siguiente:
@@ -27,7 +27,7 @@ El Proceso Verificador lee de las tres Queues, ensambla los datos en un bloque, 
 
 Finalmente, el script verificar_cadena.py lee el archivo blockchain.json para validar la cadena y generar un reporte.
 
-🛠️ Componentes y Scripts
+## 🛠️ Componentes y Scripts
 El proyecto está dividido en los siguientes módulos:
 
 main.py: Orquesta la creación de todos los procesos, canales de comunicación (FIFOs, Queues) y eventos de sincronización. Inicia la simulación y, al finalizar, ejecuta la verificación y el reporte.
@@ -48,10 +48,7 @@ Generar un reporte final en reporte.txt con estadísticas de la simulación.
 
 fifos.py: Utilidad para crear los named pipes (FIFOs) necesarios para la comunicación entre el generador y los analizadores.
 
-🚀 Tecnologías y Conceptos Utilizados
-Lenguaje: Python 3
-
-Librerías Principales:
+## Librerías Principales:
 
 multiprocessing: Para la gestión de procesos (Process), comunicación (Queue) y sincronización (Event).
 
@@ -73,19 +70,18 @@ Estructura de Datos Blockchain (Bloques, Hashing, Cadena).
 
 Simulación de datos.
 
-⚙️ Cómo Ejecutar el Programa
+## ⚙️ Cómo Ejecutar el Programa
 Asegúrate de tener Python 3 instalado.
 
 Coloca todos los archivos .py en el mismo directorio.
 
 Abre una terminal en ese directorio y ejecuta el siguiente comando:
 
-Bash
-
 python3 main.py
+
 El programa comenzará a ejecutarse, mostrando en la terminal los mensajes de cada proceso a medida que generan, analizan y verifican los datos.
 
-📄 Archivos Generados
+### 📄 Archivos Generados
 Al finalizar la ejecución, se habrán creado (o actualizado) los siguientes archivos en el directorio /tmp/:
 
 /tmp/blockchain.json: Un archivo JSON que contiene la lista de todos los bloques generados, formando la cadena de bloques completa.
