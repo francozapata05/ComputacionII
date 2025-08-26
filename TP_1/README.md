@@ -58,18 +58,6 @@ json: Para la serialización y deserialización de datos.
 
 hashlib: Para la generación de hashes criptográficos SHA-256, pilar de la blockchain.
 
-Conceptos de Programación:
-
-Programación Concurrente y Paralelismo.
-
-Comunicación Entre Procesos (IPC): FIFOs y Queues.
-
-Sincronización de Procesos.
-
-Estructura de Datos Blockchain (Bloques, Hashing, Cadena).
-
-Simulación de datos.
-
 ## ⚙️ Cómo Ejecutar el Programa
 Asegúrate de tener Python 3 instalado.
 
