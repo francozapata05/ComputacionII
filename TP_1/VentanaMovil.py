@@ -14,13 +14,11 @@ class VentanaMovil:
         self._limpiar()
     
     def _limpiar(self):
-        ahora = time.time()
-        # Filtrado seguro con comprensión de listas
-        i = 0
-        for timestamp, val in self.datos:
-            if (ahora - timestamp) >= self.ventana:
-                self.datos.pop(i)
-                i =+ 1
+        
+        tiempo_corte = time.time() - self.ventana
+        self.datos = [(timestamp, val) 
+                      for timestamp, val in self.datos 
+                      if timestamp >= tiempo_corte]
     
     def obtener_datos(self):
         self._limpiar()

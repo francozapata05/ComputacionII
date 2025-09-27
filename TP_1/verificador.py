@@ -97,11 +97,16 @@ def verificador(i, queues):
             frecuencia_media = datos["frecuencia"]["media"]
             presion_media = datos["presion"]["media"]
             oxigeno_media = datos["oxigeno"]["media"]
-            alerta = True # Por defecto True, luego se evalua
+            alerta = False 
             
-            # Evaluamos alerta True o False
-            if frecuencia_media < 180 or presion_media < 200 or 90 <= oxigeno_media <= 100:
-                alerta = False
+            if not (frecuencia_media < 200):
+                alerta = True
+            
+            if not (presion_media < 200):
+                alerta = True
+
+            if not (90 <= oxigeno_media <= 100):
+                alerta = True
 
             nuevo_bloque = construir_bloque(datos, alerta, blockchain[-1]["hash"])
             blockchain.append(nuevo_bloque)   

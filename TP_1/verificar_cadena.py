@@ -1,81 +1,132 @@
 import json, hashlib, os
 
+BLOCKCHAIN_PATH = "/tmp/blockchain.json"
+REPORT_PATH = "/tmp/reporte.txt"
+
+def calcular_hash(prev_hash, datos, timestamp):
+    """
+    Genera hash SHA-256 de forma consistente con la función del verificador.
+    """
+    cadena = f"{prev_hash}{json.dumps(datos, sort_keys=True)}{timestamp}"
+    return hashlib.sha256(cadena.encode()).hexdigest()
+
+def recalcular_hash(bloque):
+
+    try:
+        timestamp_usado = bloque['timestamp']
+    except KeyError:
+        print(f"Advertencia de verificación: Bloque no contiene clave 'timestamp'.")
+        return True 
+
+    hash_recalculado = calcular_hash(
+        bloque['prev_hash'],
+        bloque['datos'],
+        timestamp_usado
+    )
+    
+    return bloque['hash'] != hash_recalculado
+
 def verificar_cadena():
-    blockchain_path = "/tmp/blockchain.json"    
+
     lista_corruptos = []
 
     try:
-        with open(blockchain_path, "r") as f:
+        with open(BLOCKCHAIN_PATH, "r") as f:
             blockchain = json.load(f)
+    except FileNotFoundError:
+        print(f"Error: No se encontró el archivo {BLOCKCHAIN_PATH}.")
+        return lista_corruptos
     except Exception as e:
         print(f"Verificador Blockchain Error Cargar Blockchain: {e}")
         return lista_corruptos
 
-    if not blockchain:
+    if len(blockchain) < 1:
         print("Error: Blockchain vacía")
-        return False
-
+        return lista_corruptos
+    
     for index in range(len(blockchain)):
         bloque = blockchain[index]
-        if recalcular_hash(bloque, index):
-            lista_corruptos.append(index)
+        
+        # Recalcula el hash del bloque actual y verifica si es diferente al guardado
+        if recalcular_hash(bloque):
+            lista_corruptos.append(f"Bloque {index} (Hash Propio Corrupto)")
+            
+        # Verificar el encadenamiento (a partir del bloque 1)
+        if index > 0:
+            bloque_anterior = blockchain[index - 1]
+            # Comprueba si el prev_hash del bloque actual coincide con el hash del anterior
+            if bloque.get('prev_hash') != bloque_anterior.get('hash'):
+                # Usamos .get() para evitar KeyError si la estructura del bloque es inconsistente
+                lista_corruptos.append(f"Bloque {index} (Encadenamiento Roto)")
+
     return lista_corruptos
 
-        
-def recalcular_hash(bloque, index):
-    if index == 0:
-        timestamp = bloque['datos']['timestamp']
-    else:
-        timestamp = bloque['timestamp']
-    cadena = f"{bloque['prev_hash']}{json.dumps(bloque['datos'], sort_keys=True)}{timestamp}"
-    hash_recalculado = hashlib.sha256(cadena.encode()).hexdigest()
-    
-    if bloque['hash'] != hash_recalculado:
-        return True
-    return False
-
 def reporte_final():
-    blockchain_path = "/tmp/blockchain.json"
+    
     try:
-        with open(blockchain_path, "r") as f:
+        with open(BLOCKCHAIN_PATH, "r") as f:
             blockchain = json.load(f)
     except Exception as e:
         print(f"Verificador Blockchain Error Cargar Blockchain: {e}")
+        return
         
-    cant_bloques = len(blockchain)
+    cant_total_bloques = len(blockchain)
+    cant_bloques_datos = cant_total_bloques - 1 # Bloques con datos (omitiendo el Génesis)
+
+    # Si solo está el Génesis, no hay datos para promediar
+    if cant_bloques_datos <= 0:
+        print("\nReporte: Solo existe el bloque Génesis. No hay datos para promediar.")
+        return
+
     alertas = 0
-    frecuencias = 0
-    presiones = 0
-    oxigenos = 0
+    frecuencias_sum = 0
+    presiones_sum = 0
+    oxigenos_sum = 0
 
-
-    for index in range(1,cant_bloques):
+    # El bucle empieza en 1 para ignorar el Bloque Génesis (índice 0)
+    for index in range(1, cant_total_bloques):
         bloque = blockchain[index]
-        if bloque['alerta'] == True:
+        
+        if bloque.get('alerta', False) == True: # Usamos .get() con fallback por seguridad
             alertas += 1
-        frecuencias += bloque['datos']['frecuencia']['media']
-        presiones += bloque['datos']['presion']['media']
-        oxigenos += bloque['datos']['oxigeno']['media']
+            
+        try:
+            frecuencias_sum += bloque['datos']['frecuencia']['media']
+            presiones_sum += bloque['datos']['presion']['media']
+            oxigenos_sum += bloque['datos']['oxigeno']['media']
+        except KeyError as e:
+            print(f"Advertencia: Bloque {index} incompleto o corrupto (falta clave {e}). Saltando suma de datos.")
 
-    frecuencia_media = frecuencias / cant_bloques
-    presion_media = presiones / cant_bloques
-    oxigeno_media = oxigenos / cant_bloques
 
-    reporte_path = "/tmp/reporte.txt"
+    # CÁLCULO DE PROMEDIOS CORREGIDO
+    frecuencia_media = frecuencias_sum / cant_bloques_datos
+    presion_media = presiones_sum / cant_bloques_datos
+    oxigeno_media = oxigenos_sum / cant_bloques_datos
+
+    # Generar y mostrar reporte
     try:
-        with open(reporte_path, "w") as f:
-            f.write(f"Cantidad Total de Bloques: {(cant_bloques)}\n")
+        with open(REPORT_PATH, "w") as f:
+            f.write(f"Cantidad Total de Bloques (incl. Génesis): {cant_total_bloques}\n")
+            f.write(f"Cantidad de Bloques con Datos: {cant_bloques_datos}\n")
             f.write(f"Cantidad Alertas: {alertas}\n")
-            f.write(f"Frecuencia Media: {frecuencia_media}\n")
-            f.write(f"Presion Media: {presion_media}\n")
-            f.write(f"Oxigeno Media: {oxigeno_media}\n")
+            f.write(f"Frecuencia Media General: {frecuencia_media:.2f}\n")
+            f.write(f"Presion Media General: {presion_media:.2f}\n")
+            f.write(f"Oxigeno Media General: {oxigeno_media:.2f}\n")
     except Exception as e:
         print(f"Verificador Blockchain Error Reporte: {e}")
 
-    os.system(f"cat {reporte_path}")
+    # Mostrar el reporte en la consola
+    print(f"\n--- REPORTE FINAL ({REPORT_PATH}) ---")
+    os.system(f"cat {REPORT_PATH}")
+    print("-------------------------------------")
+
 
 if __name__ == '__main__':
     lista_corruptos = verificar_cadena()
-    print(f"Lista de bloques corruptos: {lista_corruptos}")
+    if lista_corruptos:
+        print(f"\n¡ADVERTENCIA! Se encontraron bloques corruptos: {lista_corruptos}")
+    else:
+        print("\nVerificación de integridad exitosa. No se encontraron bloques corruptos.")
+        
     print("Verificador Blockchain: Terminado")
     reporte_final()

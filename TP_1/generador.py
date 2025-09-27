@@ -56,6 +56,13 @@ def generador(i, FIFO_PATHS, a_listo, b_listo, c_listo, cantidad_pacientes):
     except Exception as e:
         print(f"Error Generador: {e}")
     finally:
-        # Cerrar los descriptores de las FIFO
-        if fifo_fd in file_descriptors:
-            os.close(fifo_fd)
+        # Cerramos de forma segura todos los descriptores de archivo abiertos.
+        print("Generador: Cerrando descriptores de FIFOs.")
+        for fd in file_descriptors:
+            try:
+                os.close(fd)
+            except OSError as e:
+                # Omitir si ya fue cerrado o hay error al cerrar
+                print(f"Generador: Error al cerrar descriptor {fd}: {e}")
+
+        print("Generador: Proceso finalizado.")
