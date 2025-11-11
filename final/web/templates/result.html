@@ -1,0 +1,181 @@
+{% extends "base.html" %}
+{% block content %}
+<!-- Mobile Header -->
+<div class="mobile-header">
+  <h4 class="mb-0">WebAnalyzer Pro</h4>
+  <button class="btn btn-outline-primary" type="button" id="sidebarToggle">
+    <i class="fas fa-bars"></i>
+  </button>
+</div>
+
+<div class="dashboard-layout">
+  <!-- Sidebar -->
+  <nav class="sidebar">
+    <div class="sidebar-header">
+      <i class="fas fa-wave-square"></i> WebAnalyzer Pro
+    </div>
+    <div class="sidebar-sticky pt-3">
+      <ul class="nav flex-column">
+        <li class="nav-item">
+          <a class="nav-link" href="{{ url_for('dashboard') }}">
+            <i class="fas fa-search"></i> New Analysis
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="#">
+            <i class="fas fa-history"></i> Task History
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="{{ url_for('check_task') }}">
+            <i class="fas fa-check-circle"></i> Check by Task ID
+          </a>
+        </li>
+        <li class="nav-item mt-auto">
+          <a class="nav-link text-danger" href="{{ url_for('logout') }}">
+            <i class="fas fa-sign-out-alt"></i> Logout
+          </a>
+        </li>
+      </ul>
+    </div>
+  </nav>
+
+  <!-- Main Content -->
+  <main role="main" class="px-4">
+    {% if resultado and resultado.result %}
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3 class="mb-0">Analysis Result: <span class="text-primary">{{ resultado.result.url }}</span></h3>
+        <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">
+          <i class="fas fa-arrow-left"></i> Back to Dashboard
+        </a>
+      </div>
+
+      <div class="row">
+        <!-- General Info Card -->
+        <div class="col-lg-6 mb-4">
+          <div class="card h-100">
+            <div class="card-body">
+              <h5 class="card-title"><i class="fas fa-info-circle text-primary"></i> General Information</h5>
+              <hr>
+              <dl class="row">
+                <dt class="col-sm-4">Title</dt>
+                <dd class="col-sm-8">{{ resultado.result.title or 'N/A' }}</dd>
+
+                <dt class="col-sm-4">Description</dt>
+                <dd class="col-sm-8">{{ resultado.result.description or 'N/A' }}</dd>
+
+                <dt class="col-sm-4">Response Time</dt>
+                <dd class="col-sm-8">{{ "%.2fms"|format(resultado.result.time * 1000) if resultado.result.time else 'N/A' }}</dd>
+              </dl>
+            </div>
+          </div>
+        </div>
+
+        <!-- DNS & Hosting Card -->
+        <div class="col-lg-6 mb-4">
+          <div class="card h-100">
+            <div class="card-body">
+              <h5 class="card-title"><i class="fas fa-server text-primary"></i> DNS & Hosting</h5>
+              <hr>
+              <dl class="row">
+                <dt class="col-sm-4">IP Addresses</dt>
+                <dd class="col-sm-8">
+                  {% if resultado.result.dns_info and resultado.result.dns_info.ips %}
+                    {{ resultado.result.dns_info.ips | join(', ') }}
+                  {% else %}
+                    N/A
+                  {% endif %}
+                </dd>
+
+                <dt class="col-sm-4">Hosting Company</dt>
+                <dd class="col-sm-8">{{ resultado.result.hosting_company or 'N/A' }}</dd>
+              </dl>
+            </div>
+          </div>
+        </div>
+
+        <!-- Domain Registry Card -->
+        <div class="col-lg-12 mb-4">
+          <div class="card">
+            <div class="card-body">
+              <h5 class="card-title"><i class="fas fa-id-card text-primary"></i> Domain Registry</h5>
+              <hr>
+              {% if resultado.result.domain_registry and not resultado.result.domain_registry.error %}
+                <dl class="row">
+                  <dt class="col-sm-3">Registrar</dt>
+                  <dd class="col-sm-9">{{ resultado.result.domain_registry.name or 'N/A' }}</dd>
+                  <dt class="col-sm-3">Creation Date</dt>
+                  <dd class="col-sm-9">{{ resultado.result.domain_registry.creation_date or 'N/A' }}</dd>
+                  <dt class="col-sm-3">Expiration Date</dt>
+                  <dd class="col-sm-9">{{ resultado.result.domain_registry.expiration_date or 'N/A' }}</dd>
+                  <dt class="col-sm-3">Registrant</dt>
+                  <dd class="col-sm-9">{{ resultado.result.domain_registry.registrant_name or 'N/A' }}</dd>
+                </dl>
+              {% else %}
+                <p class="text-muted">No domain registry information available.</p>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+
+        <!-- Nameservers & Email Card -->
+        <div class="col-lg-12 mb-4">
+          <div class="card">
+            <div class="card-body">
+              <h5 class="card-title"><i class="fas fa-network-wired text-primary"></i> Nameservers & Email</h5>
+              <hr>
+              <div class="row">
+                <div class="col-md-6">
+                  <h6>Nameservers (NS)</h6>
+                  {% if resultado.result.nameservers and not resultado.result.nameservers.error %}
+                    <ul class="list-group list-group-flush">
+                      {% for ns in resultado.result.nameservers %}
+                        <li class="list-group-item">{{ ns }}</li>
+                      {% endfor %}
+                    </ul>
+                  {% else %}
+                    <p class="text-muted">No nameservers found.</p>
+                  {% endif %}
+                </div>
+                <div class="col-md-6">
+                  <h6>Email Servers (MX)</h6>
+                  {% if resultado.result.email_services and not resultado.result.email_services.error %}
+                    <ul class="list-group list-group-flush">
+                      {% for mx in resultado.result.email_services %}
+                        <li class="list-group-item">{{ mx }}</li>
+                      {% endfor %}
+                    </ul>
+                  {% else %}
+                    <p class="text-muted">No email servers found.</p>
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    {% else %}
+      <div class="card text-center">
+        <div class="card-body">
+          <h5 class="card-title">Result not found</h5>
+          <p class="card-text">The requested analysis (Task ID: {{ task_id }}) could not be found or is still pending.</p>
+          <a href="{{ url_for('dashboard') }}" class="btn btn-primary">Go to Dashboard</a>
+        </div>
+      </div>
+    {% endif %}
+  </main>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const sidebar = document.querySelector('.sidebar');
+    const sidebarToggle = document.getElementById('sidebarToggle');
+
+    if (sidebarToggle) {
+      sidebarToggle.addEventListener('click', function() {
+        sidebar.classList.toggle('show');
+      });
+    }
+  });
+</script>
+{% endblock %}
