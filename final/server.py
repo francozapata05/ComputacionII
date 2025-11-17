@@ -122,7 +122,7 @@ class ThreadedTCPServer(socketserver.ThreadingMixIn, socketserver.TCPServer):
 
 
 if __name__ == "__main__":
-    HOST, PORT = "localhost", 9999
+    HOST, PORT = "0.0.0.0", 9999
 
     print("Iniciando bucle de eventos de asyncio en segundo plano...")
     asyncio_loop = AsyncioEventLoop()

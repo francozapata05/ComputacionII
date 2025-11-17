@@ -1,0 +1,33 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.pyc
+*.pyd
+*.pyo
+
+# Distributions and packaging
+.Python
+build/
+dist/
+eggs/
+*.egg-info/
+.env
+.venv/
+venv/
+env/
+
+# Editors
+.vscode/
+
+# OS
+.DS_Store
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Logs and databases
+*.log
+*.sqlite
+*.db
+
+# Specific to this project
+*.env

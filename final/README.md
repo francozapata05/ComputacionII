@@ -1,47 +1,44 @@
 # 🌐 WebAnalyzer Pro
 
-**WebAnalyzer Pro** es un sistema distribuido para el análisis técnico de sitios web. Está diseñado como proyecto final para la materia **Computación II** de Ingeniería en Informática, e integra múltiples tecnologías y conceptos vistos en clase: sockets, concurrencia, asincronismo, IPC, multiproceso, scraping, y contenedores.
+**WebAnalyzer Pro** es un sistema distribuido para el análisis técnico de sitios web, completamente funcional y contenerizado. Fue desarrollado como proyecto final para la materia **Computación II** de Ingeniería en Informática, integrando tecnologías como sockets, concurrencia, asincronismo, IPC, multiproceso, scraping y contenedores.
 
-El sistema permite a usuarios conectarse por socket TCP, enviar una URL a analizar, y luego consultar el resultado por un `task_id`. Todo el análisis se realiza en segundo plano con asincronismo real (`asyncio`), y se está integrando un **módulo de autenticación separado por IPC** y una **interfaz web con historial personal**.
+El sistema permite a los usuarios registrarse, iniciar sesión y, a través de una interfaz web, enviar URLs para su análisis. Los resultados se almacenan y se muestran en un historial personal. La arquitectura se basa en microservicios que se comunican por TCP, orquestados con Docker Compose.
 
 ---
 
 ## 🎯 Objetivos académicos cumplidos
 
-- ✅ Conexión de múltiples clientes concurrentes (socket TCP + threads)
-- ✅ Uso de asincronismo para tareas I/O-bound (`asyncio.create_task`)
-- ✅ Comunicación entre procesos (IPC) para autenticación de usuarios
-- ✅ Parseo de argumentos por línea de comandos en scripts cliente
-- ✅ Arquitectura modular extensible
-- 🐳 Despliegue en contenedores Docker (en curso)
-- 🌐 Interfaz web para login y visualización de historial (en curso)
-- 💾 Almacenamiento de tareas por usuario (en curso)
+- ✅ **Concurrencia:** Conexión de múltiples clientes a través de una aplicación web.
+- ✅ **Asincronismo:** Uso de `asyncio` para tareas de análisis I/O-bound en un servicio dedicado.
+- ✅ **Comunicación entre procesos (IPC):** Múltiples servicios (`web`, `auth_service`, `analyzer_service`) comunicándose a través de sockets TCP dentro de una red Docker.
+- ✅ **Arquitectura de Microservicios:** El sistema está desacoplado en servicios independientes para la web, autenticación y análisis.
+- ✅ **Contenerización:** Despliegue completo y orquestado con `docker-compose`.
+- ✅ **Interfaz Web:** Interfaz de usuario funcional con Flask para registro, login, dashboard e historial.
+- ✅ **Almacenamiento Persistente:** Uso de PostgreSQL para almacenar usuarios y resultados de análisis.
 
 ---
 
-## 🧠 Funcionalidades actuales
+## 🧠 Funcionalidades implementadas
 
-- 🚪 Servidor TCP multicliente (`ThreadingMixIn`)
-- ⚡ Tareas asíncronas en segundo plano (`aiohttp`, `asyncio`)
-- 🔁 Consulta de resultados por `task_id`
-- 🧹 Web scraping básico: título, descripción, tiempo de carga
-- 💬 Protocolo de mensajes JSON
-- 📡 Cliente CLI (`client.py`) y verificador (`check_result.py`)
+- 🔐 **Autenticación de Usuarios:** Registro e inicio de sesión seguros.
+- 👤 **Sesiones de Usuario:** Gestión de sesiones para una experiencia personalizada.
+- 🌐 **Interfaz Web Completa:** Un panel de control (`dashboard`) para enviar URLs y ver el historial de análisis.
+- ⚡ **Análisis Asíncrono:** Las tareas de análisis se ejecutan en segundo plano sin bloquear la interfaz de usuario.
+- 💾 **Base de Datos Robusta:** PostgreSQL para persistencia de datos de usuarios y análisis.
+- 🐳 **Orquestación con Docker:** Todos los servicios están definidos y gestionados con `docker-compose`.
+- 📡 **Comunicación por Sockets TCP:** Los servicios internos se comunican a través de la red de Docker.
 
 ---
 
-## 🧱 En desarrollo / Próximas funcionalidades
+## 🧱 Próximas funcionalidades (Sugerencias)
 
-| Funcionalidad                  | Tecnología |
-|-------------------------------|------------|
-| 🔐 Autenticación por IPC       | `multiprocessing.Process` + `Pipe` / `Queue`  
-| 🌐 Interfaz web                | `Flask`, `Bootstrap`, `SQLite`
-| 📬 Historial personal          | Asociación usuario ↔ task_id ↔ resultados
-| 🌎 DNS Lookup async            | `aiodns`
-| 🕵️ WHOIS asincrónico           | `asyncio.create_subprocess_exec()`
-| 🐳 Dockerización               | `docker-compose` con servicios: server, auth, web, redis (opcional)
-| 📂 Almacenamiento persistente | `SQLite` (simple) o `PostgreSQL` (para escalar)
-| 🖼️ UI visual                   | Resultados graficados en web con métricas
+| Funcionalidad Potencial        | Tecnología Sugerida        |
+|--------------------------------|----------------------------|
+| 📊 Visualización de Métricas   | `Chart.js` o `D3.js`       |
+| 🔄 Análisis Periódico          | Tareas programadas (`Celery Beat`) |
+| 📤 Exportación de Resultados   | Generación de CSV o PDF    |
+| 🎨 Mejoras en la UI/UX          | Frameworks de CSS más avanzados |
+| 🧪 Más Métricas de Análisis     | `Lighthouse`, `Selenium`   |
 
 ---
 
@@ -49,20 +46,19 @@ El sistema permite a usuarios conectarse por socket TCP, enviar una URL a analiz
 
 ```
 final/
-├── server.py                # Servidor TCP multicliente asincrónico
-├── client.py                # Cliente CLI para enviar solicitudes de análisis
-├── check_result.py          # Cliente CLI para consultar resultados por task_id
-├── analyzer_async.py        # Scraping y análisis con aiohttp
-├── auth_process.py          # Proceso separado para autenticar usuarios (IPC)
-├── web/
-│   ├── app.py               # Panel web Flask
-│   ├── templates/
-│   └── static/
+├── app/
+│   ├── app.py               # Aplicación web principal (Flask)
+│   ├── auth_client.py       # Cliente para el servicio de autenticación
+│   ├── templates/           # Plantillas HTML para la interfaz web
+│   └── static/              # Archivos estáticos (CSS, JS)
 ├── database/
-│   └── models.py            # Usuarios, tareas, resultados
-├── docker-compose.yml       # Orquestación de contenedores
-├── Dockerfile               # Imagen del servidor
-├── requirements.txt         # Dependencias
+│   └── models.py            # Modelos de datos SQLAlchemy (User, Search)
+├── auth_process.py          # Servicio de autenticación
+├── server.py                # Servidor de análisis (analyzer_service)
+├── analyzer_async.py        # Lógica de scraping y análisis con aiohttp
+├── docker-compose.yml       # Orquestación de todos los servicios
+├── Dockerfile               # Define la imagen para los servicios
+├── requirements.txt         # Dependencias de Python
 └── README.md
 ```
 
@@ -70,82 +66,71 @@ final/
 
 ## 🚀 Cómo ejecutar
 
-### 1. Instalar dependencias
-```bash
-python -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
-```
+### 1. Prerrequisitos
+- Tener `Docker` y `docker-compose` instalados.
 
-### 2. Iniciar el servidor TCP
-```bash
-python server.py
-```
+### 2. Configuración
+- Crea un archivo `.env` en la raíz del proyecto con las siguientes variables:
+  ```
+  POSTGRES_USER=tu_usuario
+  POSTGRES_PASSWORD=tu_contraseña
+  POSTGRES_DB=tu_base_de_datos
+  FLASK_SECRET_KEY=una_clave_secreta_muy_segura
+  ```
 
-### 3. Enviar una URL
-```bash
-python client.py --url https://ejemplo.com
-```
+### 3. Iniciar la aplicación
+- Abre una terminal en la raíz del proyecto y ejecuta:
+  ```bash
+  docker-compose up --build -d
+  ```
+- La aplicación web estará disponible en `http://localhost:5000`.
 
-### 4. Consultar el estado o resultado
+### 4. Detener la aplicación
 ```bash
-python check_result.py --task-id 123e4567-e89b-12d3-a456-426614174000
+docker-compose down
 ```
 
 ---
 
-## 💻 Interfaz web (próximamente)
+## 💻 Interfaz web
 
-- Pantalla de login
-- Panel con historial personal
-- Estado de cada análisis
-- Detalles visuales del resultado (carga, título, descripción, etc.)
-- Exportación a JSON o CSV
+- **/register**: Página para crear una nueva cuenta de usuario.
+- **/login**: Página para iniciar sesión.
+- **/dashboard**: Panel principal donde se pueden enviar URLs para analizar y ver el historial de análisis.
+- **/logout**: Cierra la sesión del usuario.
 
 ---
 
-## 🧪 Análisis técnico actual (Scraping)
+## 🧪 Análisis técnico actual
 
 | Elemento                 | ¿Qué se analiza?                            |
 |--------------------------|---------------------------------------------|
 | ✅ Título (`<title>`)     | Extraído con BeautifulSoup                 |
 | ✅ Meta descripción       | Tag `<meta name="description">`            |
 | ✅ Tiempo de respuesta    | Medido con `time.time()` y `aiohttp`       |
-| (en curso) DNS            | Consulta asincrónica con `aiodns`          |
-| (en curso) WHOIS          | Ejecutado como subprocess                  |
-| (planificado) CMS detectado | WordPress, Shopify, etc. (por HTML hints) |
+| ✅ DNS (IPs)              | Resuelve los IPs asociados al hostname     |
+| ✅ Hosting                | Identifica la organización de hosting (vía IP) |
+| ✅ Registros NS y MX      | Obtiene los servidores de nombres y de correo |
+| ✅ WHOIS                  | Información del registrador del dominio    |
 
 ---
 
-## 🐳 Docker & Despliegue (en construcción)
+## 🐳 Docker & Despliegue
 
-```bash
-docker-compose up --build
-```
+La aplicación está completamente orquestada con `docker-compose`. Los servicios definidos son:
 
-Servicios planeados:
-- `server`: contenedor del servidor TCP
-- `auth`: proceso autenticador (IPC)
-- `web`: frontend Flask
-- `db`: SQLite o PostgreSQL
-- `redis` (opcional): si se extiende a tareas Celery en futuro
+- `db`: Contenedor con la base de datos PostgreSQL.
+- `auth_service`: Servicio que maneja la lógica de autenticación.
+- `analyzer_service`: Servicio que procesa las solicitudes de análisis de URLs.
+- `web`: La aplicación Flask que sirve la interfaz de usuario.
+
+Todos los servicios se comunican entre sí a través de una red interna de Docker.
 
 ---
 
-## 📜 Ejemplo de análisis exitoso
+## 📜 Ejemplo de análisis exitoso (en la web)
 
-```json
-{
-  "status": "done",
-  "task_id": "4b58a52a-bda9-4d0b-a87a-dfb1225e3915",
-  "result": {
-    "url": "https://www.python.org",
-    "title": "Welcome to Python.org",
-    "description": "The official home of the Python Programming Language.",
-    "time": 1.36
-  }
-}
-```
+Una vez que un análisis se completa, se muestra en el historial del dashboard con su título, descripción y tiempo de carga.
 
 ---
 
