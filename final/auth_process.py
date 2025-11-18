@@ -11,7 +11,16 @@ from database.models import db, User
 # ==========================================================
 
 def create_app_context():
-    """Crea un contexto de aplicación Flask para interactuar con la base de datos."""
+    """Este script no es una aplicación web Flask, pero necesita interactuar con la base de    
+     datos que fue configurada para Flask (usando Flask-SQLAlchemy).                         
+   * La función create_app_context crea una instancia mínima de una aplicación Flask. Su     
+     único propósito es cargar la configuración de la base de datos desde las variables de   
+     entorno y configurar SQLAlchemy (db.init_app(app)).                                     
+   * Luego, a lo largo del código, se usa with app.app_context(): antes de cualquier         
+     operación de base de datos. Esto "activa" el contexto necesario para que SQLAlchemy     
+     sepa a qué base de datos conectarse y cómo funcionar.                                   
+   * En resumen, reutiliza la configuración y los modelos de la base de datos de Flask en un 
+     script que no es una aplicación web.    """
     app = Flask(__name__)
     
     # Asegurarse de que la variable de entorno DATABASE_URL esté disponible
@@ -76,7 +85,7 @@ def handle_request(data):
         return {'status': 'error', 'message': 'Acción no válida.'}
 
 # ==========================================================
-# Servidor de Sockets UNIX
+# Servidor de Sockets
 # ==========================================================
 
 def run_socket_server():

@@ -2,8 +2,6 @@ import socket
 import json
 import os
 
-# La ruta del socket debe ser la misma que en auth_process.py
-SOCKET_FILE = "/tmp/auth_service.sock"
 
 def _send_request(request_data):
     """

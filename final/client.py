@@ -2,11 +2,11 @@ import socket
 import json
 import argparse
 
-def send_request(request_data):
+def send_request(host, port, request_data):
     """Conecta, envía datos y retorna la respuesta del servidor."""
     try:
-        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
-            sock.connect(("localhost", 9999))
+        with socket.create_connection((host, port), timeout=5) as sock:
+            print(f"Conectado exitosamente a {sock.getpeername()}")
             sock.sendall(json.dumps(request_data).encode())
             response = sock.recv(4096)
             if not response:
@@ -20,9 +20,10 @@ def send_request(request_data):
 def main():
     parser = argparse.ArgumentParser(
         description="Cliente para enviar URLs al servicio de análisis.",
-        epilog="Ejemplo de uso:\n  python client.py --url http://example.com"
+        epilog="Ejemplo de uso:\n  python client.py --url http://example.com --host 127.0.0.1"
     )
     parser.add_argument("--url", required=True, help="La URL a analizar.")
+    parser.add_argument("--host", default="localhost", help="El host del servidor (por defecto: localhost).")
     args = parser.parse_args()
 
     request_data = {
@@ -30,7 +31,7 @@ def main():
         "url": args.url
     }
 
-    result = send_request(request_data)
+    result = send_request(args.host, 9999, request_data)
 
     print(json.dumps(result, indent=2, ensure_ascii=False))
 
