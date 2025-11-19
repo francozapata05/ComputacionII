@@ -22,7 +22,7 @@ def login_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
         if 'user_id' not in session:
-            flash('Debes iniciar sesión para acceder a esta página.', 'warning')
+            flash('You must log in to access this page.', 'warning')
             return redirect(url_for('login'))
         return f(*args, **kwargs)
     return decorated_function
@@ -49,16 +49,16 @@ def register():
         print(  f"Registro: email={email}, password={password }")
 
         if not email or not password:
-            flash('Email y contraseña son requeridos.', 'warning')
+            flash('Email and password are required.', 'warning')
             return render_template('register.html')
 
         response = register_user(email, password)
         
         if response.get('status') == 'success':
-            flash('Registro exitoso. Ahora puedes iniciar sesión.', 'success')
+            flash('Registration successful. Now you can log in.', 'success')
             return redirect(url_for('login'))
         else:
-            flash(response.get('message', 'Ocurrió un error durante el registro.'), 'danger')
+            flash(response.get('message', 'An error occurred during registration.'), 'danger')
             return render_template('register.html')
 
     return render_template('register.html')
@@ -79,17 +79,17 @@ def login():
             user_data = response.get('user', {})
             session['user_id'] = user_data.get('id')
             session['user_email'] = user_data.get('email')
-            flash('Inicio de sesión exitoso.', 'success')
+            flash('Logged in Successfully.', 'success')
             return redirect(url_for('dashboard'))
         else:
-            flash(response.get('message', 'Credenciales inválidas.'), 'danger')
+            flash(response.get('message', 'Invalid Credentials'), 'danger')
 
     return render_template('login.html')
 
 @app.route('/logout')
 def logout():
     session.clear()
-    flash('Has cerrado sesión.', 'info')
+    flash('You have logged out.', 'info')
     return redirect(url_for('login'))
 
 @app.route('/dashboard', methods=['GET', 'POST'])
@@ -109,9 +109,9 @@ def dashboard():
             )
             db.session.add(new_search)
             db.session.commit()
-            flash(f"Análisis para {url} iniciado con éxito. Task ID: {task_id}", "success")
+            flash(f"Analysis for {url} started successfully. Task ID: {task_id}", "success")
         else:
-            flash('Error: No se pudo enviar la URL al servidor de análisis.', 'danger')
+            flash('Error: Could not send URL to analysis server.', 'danger')
         return redirect(url_for('dashboard'))
 
     # GET request
@@ -139,7 +139,7 @@ def check_task():
         if task_id:
             return redirect(url_for('resultado', task_id=task_id))
         else:
-            flash("Por favor, ingrese un Task ID.", "warning")
+            flash("Please enter a Task ID.", "warning")
             return redirect(url_for('check_task'))
     return render_template('check_task.html')
 
@@ -150,7 +150,7 @@ def resultado(task_id):
     search = Search.query.filter_by(task_id=task_id, user_id=user_id).first()
 
     if not search:
-        flash("Task ID no encontrado o no te pertenece.", "danger")
+        flash("Task ID not found or you do not belong to it.", "danger")
         return redirect(url_for('dashboard'))
 
     if search.status == 'pending':

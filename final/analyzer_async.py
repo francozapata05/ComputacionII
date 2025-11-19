@@ -7,7 +7,15 @@ import socket
 import whois
 import dns.resolver
 import tldextract
+import multiprocessing
 
+# --- Global Log Queue ---
+_log_queue: multiprocessing.Queue = None
+
+def set_log_queue(queue: multiprocessing.Queue):
+    """Injects the logging queue from an external module."""
+    global _log_queue
+    _log_queue = queue
 
 async def get_hosting_company(session, ip):
     """Función asíncrona para obtener la empresa de hosting desde ip-api.com."""
@@ -127,6 +135,18 @@ def _get_mx_records_sync(hostname):
 
 
 async def analizar_url(url):
+    # Enviar log al inicio del análisis
+    if _log_queue:
+        try:
+            _log_queue.put({
+                "source": "analyzer",
+                "event": "analysis_started",
+                "url": url
+            })
+        except Exception as e:
+            # Evitar que un fallo en el logging detenga el análisis
+            print(f"[ERROR-LOGGING] No se pudo enviar el mensaje a la cola: {e}")
+
     print("Iniciando análisis para:", url)
     result = {
         "url": url,
@@ -217,4 +237,17 @@ async def analizar_url(url):
         result["error"] = str(e)
 
     print("Análisis completado para:", url)
+    
+    # Enviar log al final del análisis
+    if _log_queue:
+        try:
+            _log_queue.put({
+                "source": "analyzer",
+                "event": "analysis_finished",
+                "url": url,
+                "status": result.get("status", "error")
+            })
+        except Exception as e:
+            print(f"[ERROR-LOGGING] No se pudo enviar el mensaje a la cola: {e}")
+
     return result

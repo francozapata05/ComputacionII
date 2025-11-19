@@ -4,8 +4,13 @@ import uuid
 import asyncio
 import threading
 from concurrent.futures import Future
-from analyzer_async import analizar_url
 import socket
+import multiprocessing
+
+# Importar las funciones necesarias de nuestros módulos
+from analyzer_async import analizar_url, set_log_queue
+from log_process import logger_process, END
+
 
 # Diccionario para tareas en segundo plano
 pending_tasks = {}
@@ -182,67 +187,72 @@ def iniciar_servidor_tcp(server_class, host, port, handler, asyncio_loop):
 if __name__ == "__main__":
     PORT = 9999
     
+    # 1. Iniciar el proceso de logging
+    print("Iniciando el proceso de logging...")
+    log_queue = multiprocessing.Queue()
+    logger_p = multiprocessing.Process(target=logger_process, args=(log_queue,))
+    logger_p.daemon = True  # Asegura que el proceso logger no bloquee la salida
+    logger_p.start()
+
+    # 2. Inyectar la cola en el módulo analizador
+    set_log_queue(log_queue)
+    
+    # 3. Iniciar el bucle de eventos para tareas asíncronas
     print("Iniciando bucle de eventos de asyncio en segundo plano...")
     asyncio_loop = AsyncioEventLoop()
     asyncio_loop.start()
 
     servidores = []
-
-    # 1. Obtener direcciones disponibles usando AF_UNSPEC y getaddrinfo
-    # Usamos None para el host para obtener todas las interfaces disponibles
-    direcciones = socket.getaddrinfo(
-        None, 
-        PORT, 
-        socket.AF_UNSPEC, 
-        socket.SOCK_STREAM, 
-        socket.IPPROTO_TCP, 
-        socket.AI_PASSIVE # Importante para sockets de servidor
-    )
     
-    # 2. Iniciar un servidor por cada familia de direcciones única
-    familias_iniciadas = set()
-    for addr_info in direcciones:
-        familia, tipo_socket, protocolo, canonname, sa = addr_info
-        host, port = sa[:2] # Tomamos la dirección y puerto
-        
-        if familia == socket.AF_INET and familia not in familias_iniciadas:
-            # Servidor IPv4
-            server_class = IPv4ThreadedTCPServer
-            srv, thread = iniciar_servidor_tcp(
-                server_class, host, PORT, ThreadedTCPRequestHandler, asyncio_loop
-            )
-            if srv:
-                servidores.append(srv)
-                familias_iniciadas.add(familia)
-                
-        elif familia == socket.AF_INET6 and familia not in familias_iniciadas:
-            # Servidor IPv6
-            server_class = IPv6ThreadedTCPServer
-            srv, thread = iniciar_servidor_tcp(
-                server_class, host, PORT, ThreadedTCPRequestHandler, asyncio_loop
-            )
-            if srv:
-                servidores.append(srv)
-                familias_iniciadas.add(familia)
-                
-    if not servidores:
-        print("No se pudo iniciar ningún servidor. Verifique las interfaces de red.")
-        asyncio_loop.stop()
-        exit(1)
-
-    print("\nServidores TCP iniciados y listos para recibir peticiones.")
-    
+    # 4. Iniciar los servidores TCP
     try:
-        # Mantenemos el hilo principal vivo, sin necesidad de otro loop
+        direcciones = socket.getaddrinfo(
+            None, PORT, socket.AF_UNSPEC, socket.SOCK_STREAM, socket.IPPROTO_TCP, socket.AI_PASSIVE
+        )
+        
+        familias_iniciadas = set()
+        for addr_info in direcciones:
+            familia, _, _, _, sa = addr_info
+            host, port = sa[:2]
+            
+            if familia == socket.AF_INET and familia not in familias_iniciadas:
+                srv, _ = iniciar_servidor_tcp(IPv4ThreadedTCPServer, host, PORT, ThreadedTCPRequestHandler, asyncio_loop)
+                if srv:
+                    servidores.append(srv)
+                    familias_iniciadas.add(familia)
+                    
+            elif familia == socket.AF_INET6 and familia not in familias_iniciadas:
+                srv, _ = iniciar_servidor_tcp(IPv6ThreadedTCPServer, host, PORT, ThreadedTCPRequestHandler, asyncio_loop)
+                if srv:
+                    servidores.append(srv)
+                    familias_iniciadas.add(familia)
+                    
+        if not servidores:
+            raise RuntimeError("No se pudo iniciar ningún servidor. Verifique las interfaces de red.")
+
+        print("\nServidores TCP iniciados y listos para recibir peticiones.")
+        
+        # 5. Mantener el hilo principal vivo
         while True:
-            threading.Event().wait(1) # Espera pasiva
+            threading.Event().wait(1)
             
     except KeyboardInterrupt:
-        print("\nDeteniendo servidores...")
-        for srv in servidores:
-            srv.shutdown()
+        print("\nDeteniendo servidores por petición del usuario...")
+    except Exception as e:
+        print(f"\nError fatal durante el inicio: {e}")
         
     finally:
+        # 6. Proceso de cierre limpio
+        print("Iniciando secuencia de cierre...")
+        for srv in servidores:
+            print(f"Cerrando servidor en {srv.server_address}...")
+            srv.shutdown()
+        
         print("Deteniendo bucle de asyncio...")
         asyncio_loop.stop()
-        print("Servidores y bucle de asyncio cerrados.")
+        
+        print("Deteniendo proceso de logging...")
+        log_queue.put(END)
+        logger_p.join(timeout=5) # Espera hasta 5 segundos por el proceso de log
+        
+        print("Cierre completado.")

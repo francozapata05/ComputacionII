@@ -165,7 +165,7 @@
             </div>
           {% else %}
             <h5 class="card-title">Result Not Found</h5>
-            <p class="card-text">The requested analysis (Task ID: {{ task_id }}) could not be found or does not belong to you.</p>
+            <p class="card-text">The requested analysis (Task ID: {{ task_id }}) failed or does not belong to you.</p>
           {% endif %}
           <br><br>
           <a href="{{ url_for('dashboard') }}" class="btn btn-primary">Go to Dashboard</a>

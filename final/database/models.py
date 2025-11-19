@@ -30,7 +30,7 @@ class Search(db.Model):
     title = Column(String(200), nullable=True)
     description = Column(String(500), nullable=True)
     loading_time = Column(Float, nullable=True)
-    hosting_company = Column(String(200), nullable=True)
+    hosting_company = Column(JSONB, nullable=True)
     
     # Para almacenar el resto (DNS, nameservers, registro de dominio completo)
     details = Column(JSONB, nullable=True) 
